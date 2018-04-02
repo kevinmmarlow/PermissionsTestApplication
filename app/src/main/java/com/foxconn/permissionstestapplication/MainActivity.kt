@@ -54,6 +54,9 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recyclerView)
 
+        permissionManager.enableAccessibilityPermission()
+        permissionManager.enableNotificationAccessPermission()
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
