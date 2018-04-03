@@ -38,6 +38,10 @@ public class PermissionManager {
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
     private static final String DEVELOPMENT_FORCE_RESIZABLE_ACTIVITIES = "force_resizable_activities";
     private static final String DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT = "enable_freeform_support";
+    private static final String TEST_ACCESSIBILITYSERVICE =
+            "com.foxconn.permissionstestapplication/" + TestAccessibilityService.class.getCanonicalName();
+    private static final String TEST_NOTIFICATIONSERVICE =
+            "com.foxconn.permissionstestapplication/" + TestNotificationService.class.getCanonicalName();
 
     private final Context context;
     private final UsageStatsManager usageStatsManager;
@@ -92,6 +96,38 @@ public class PermissionManager {
 
     private boolean hasSystemFreeFormSupport() {
         return Settings.Global.getInt(context.getContentResolver(), DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, -1) == 1;
+    }
+
+    private boolean isAccessbilityEnabled() {
+        try {
+            return Settings.Secure.getInt(context.getApplicationContext().getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED) != 0;
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean enableAccessibilityPermission() {
+        if (!isAccessbilityEnabled()) {
+            Settings.Secure.putInt(context.getApplicationContext().getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED, 1);
+        }
+
+        if (hasAccessibilityPermission()) return true;
+
+        String vals = Settings.Secure.getString(
+                context.getApplicationContext().getContentResolver(),
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+
+        String newvals = TEST_ACCESSIBILITYSERVICE;
+        if (null != vals && !vals.isEmpty()) {
+            newvals = vals+":"+TEST_ACCESSIBILITYSERVICE;
+        }
+
+        return Settings.Secure.putString(context.getApplicationContext().getContentResolver()
+                ,Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, newvals);
     }
 
     public boolean hasAccessibilityPermission() {
@@ -151,6 +187,22 @@ public class PermissionManager {
         }
 
         return false;
+    }
+
+    public boolean enableNotificationAccessPermission() {
+        if (hasNotificationAccessPermission()) return true;
+
+        final String vals = Settings.Secure.getString(
+                context.getApplicationContext().getContentResolver()
+                , ENABLED_NOTIFICATION_LISTENERS);
+
+        String newval = TEST_NOTIFICATIONSERVICE;
+        if (null != vals && !vals.isEmpty()) {
+            newval = vals+":"+TEST_NOTIFICATIONSERVICE;
+        }
+
+        return Settings.Secure.putString(context.getContentResolver(),
+                ENABLED_NOTIFICATION_LISTENERS, newval);
     }
 
     public boolean hasModifySystemPermission() {
